@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #0E1626; --ground-2: #16223A;
+    --paper: #F5F7FA; --surface: #FFFFFF;
+    --ink: #101B2E; --muted: #7A8598; --faint: #AAB3C2;
+    --line: #E3E8F0; --line-soft: #EFF2F7;
+    --cyan: #16A3C9; --teal: #1BC7B3;
+    --lime: #C6F24E; --lime-deep: #A8D62F;
+    --grot: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'Space Mono', ui-monospace, monospace;
+    --body: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: var(--body); color: var(--ink); background: var(--paper); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  /* ===== APP FRAME: header + split panes, full viewport ===== */
+  .app { height: 100dvh; display: flex; flex-direction: column; max-width: 1360px; margin: 0 auto; padding: 18px 20px 16px; }
+
+  /* HEADER (compact) */
+  .top { display: grid; grid-template-columns: 1fr auto; gap: 12px 32px; align-items: end; padding: 4px 4px 14px; flex: none; }
+  .eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 7px; display: flex; align-items: center; gap: 8px; }
+  .eyebrow .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 0 rgba(27,199,179,.6); animation: beacon 2.4s ease-out infinite; flex: none; }
+  @keyframes beacon { 0% { box-shadow: 0 0 0 0 rgba(27,199,179,.55);} 100% { box-shadow: 0 0 0 9px rgba(27,199,179,0);} }
+  h1 { font-family: var(--grot); font-weight: 700; font-size: clamp(22px, 3.2vw, 34px); line-height: 1; letter-spacing: -.02em; }
+  h1 .sub { display: block; font-size: .42em; font-weight: 500; color: var(--muted); margin-top: 5px; }
+  .headline-metric { text-align: right; }
+  .headline-metric .pct { font-family: var(--grot); font-weight: 700; letter-spacing: -.03em; font-size: clamp(30px, 4.4vw, 48px); line-height: .9; background: linear-gradient(120deg, var(--cyan), var(--teal)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .headline-metric .pct small { font-size: .38em; -webkit-text-fill-color: var(--faint); }
+  .headline-metric .stamp { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 5px; }
+  .headline-metric .stamp b { color: var(--ink); font-weight: 700; }
+
+  /* MOBILE TABS (hidden on desktop) */
+  .tabbar { display: none; flex: none; gap: 6px; padding: 0 0 10px; }
+  .tabbar button { flex: 1; font-family: var(--grot); font-weight: 600; font-size: 13px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+  .tabbar button.on { background: var(--ground); color: #EAF0F8; border-color: var(--ground); }
+
+  /* SPLIT */
+  .split { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .pane { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 2px 2px 8px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 1px 2px rgba(16,27,46,.04), 0 8px 24px -18px rgba(16,27,46,.25); }
+  .panel + .panel { margin-top: 16px; }
+  .panel-head { padding: 15px 20px 12px; border-bottom: 1px solid var(--line-soft); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .panel-head h2 { font-family: var(--grot); font-weight: 600; font-size: 14.5px; }
+  .panel-head .meta { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  /* ===== LEFT PANE: milestones ===== */
+  .stack-panel { padding: 18px 18px 22px; }
+  .zone-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); margin: 2px 2px 11px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+  .zone-label b { color: var(--ink); }
+  .zone-label.rem b { color: var(--lime-deep); }
+
+  .rem-grid { display: grid; grid-template-columns: 1fr; gap: 9px; margin-bottom: 20px; }
+  @media (min-width: 1180px) { .rem-grid { grid-template-columns: 1fr 1fr; } }
+  .rcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; outline: none; }
+  .rcard:hover, .rcard:focus-visible, .rcard.open { transform: translateY(-2px); box-shadow: 0 12px 26px -14px rgba(16,27,46,.4); border-color: var(--teal); }
+  .rcard .r-top { display: flex; align-items: center; gap: 8px; }
+  .rcard .r-seq { font-family: var(--mono); font-size: 10px; color: var(--faint); flex: none; }
+  .rcard .r-name { font-family: var(--grot); font-weight: 600; font-size: 13px; flex: 1; min-width: 0; }
+  .rcard .r-status { font-family: var(--mono); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; flex: none; white-space: nowrap; }
+  .rcard.active .r-status { background: rgba(168,214,47,.18); color: var(--lime-deep); }
+  .rcard.pending .r-status { background: var(--line-soft); color: var(--muted); }
+  .rcard .r-fillbar { height: 4px; border-radius: 4px; background: var(--line-soft); margin-top: 8px; overflow: hidden; }
+  .rcard .r-fillbar span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--lime-deep), var(--lime)); position: relative; }
+  .rcard.active .r-fillbar span::after { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0 rgba(198,242,78,.7); animation: beacon 2s ease-out infinite; }
+  .rcard .r-detail { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .28s ease, opacity .2s ease, margin .28s ease; }
+  .rcard:hover .r-detail, .rcard:focus-visible .r-detail, .rcard.open .r-detail { max-height: 340px; opacity: 1; margin-top: 10px; }
+  .rcard .r-note { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+  .rcard .r-steps { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .rcard .r-steps li { display: flex; gap: 8px; align-items: baseline; font-size: 12px; color: #33415C; }
+  .rcard .r-steps .dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--faint); transform: translateY(3px); }
+  .rcard .r-steps li.done .dot { background: var(--teal); }
+  .rcard .r-steps li.done { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(27,199,179,.5); }
+  .rcard .r-share { font-family: var(--mono); font-size: 9.5px; color: var(--faint); margin-top: 8px; }
+
+  .waterline { display: flex; align-items: center; gap: 12px; margin: 2px 0 16px; }
+  .waterline .wl-line { flex: 1; border-top: 2px dashed var(--teal); }
+  .waterline .wl-tag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); white-space: nowrap; }
+
+  .phase-head { grid-column: 1 / -1; font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 9px 2px 0; display: flex; align-items: center; gap: 10px; }
+  .phase-head::after { content: ""; flex: 1; border-top: 1px solid var(--line-soft); }
+  .wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 6px; }
+  .brick { background: linear-gradient(100deg, var(--ground), var(--ground-2)); border: 1px solid rgba(255,255,255,.05); border-radius: 8px; padding: 7px 10px; min-height: 32px; cursor: pointer; display: flex; align-items: center; gap: 7px; outline: none; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
+  .brick:hover, .brick:focus-visible, .brick.lit { transform: translateY(-2px); border-color: rgba(27,199,179,.55); box-shadow: 0 10px 24px -12px rgba(14,22,38,.7); }
+  .brick .b-name { font-family: var(--grot); font-weight: 500; font-size: 11.5px; color: #E7ECF4; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brick .b-tick { color: var(--teal); font-family: var(--mono); font-size: 10px; flex: none; }
+  .brick .b-badge { font-family: var(--mono); font-size: 7.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ground); background: var(--teal); padding: 1px 5px; border-radius: 20px; flex: none; }
+
+  .glegend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+  .glegend .item { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+  .glegend .sw { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .glegend .sw.done { background: linear-gradient(100deg, var(--ground), var(--ground-2)); }
+  .glegend .sw.active { background: var(--lime); }
+  .glegend .sw.pending { background: var(--surface); border: 1.5px solid var(--line); }
+
+  .footnote { margin: 14px 4px 4px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .footnote b { color: var(--ink); font-weight: 600; }
+
+  /* ===== RIGHT PANE: updates ===== */
+  .history-body { padding: 14px 20px 18px; }
+  .spark { width: 100%; height: 84px; display: block; }
+  .spark-cap { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 7px; }
+  .report { padding: 14px 20px; border-bottom: 1px solid var(--line-soft); }
+  .report:last-child { border-bottom: none; }
+  .report-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+  .report-date { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+  .report-tag { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; background: rgba(27,199,179,.14); color: #0E8F7F; padding: 2px 7px; border-radius: 20px; margin-left: 7px; }
+  .report-pct { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .report-pct .delta { color: var(--lime-deep); margin-left: 6px; font-weight: 700; }
+  .report ul { list-style: none; }
+  .report li { font-size: 12.5px; padding: 2px 0 2px 15px; position: relative; color: #2C3A54; }
+  .report li::before { content: ""; position: absolute; left: 0; top: .72em; width: 7px; height: 2px; background: var(--cyan); border-radius: 2px; }
+  .empty { padding: 20px; font-size: 13px; color: var(--muted); font-style: italic; }
+
+  /* POPOVER */
+  .pop { position: fixed; z-index: 50; width: 300px; max-width: calc(100vw - 24px); background: var(--ground); border: 1px solid rgba(27,199,179,.35); border-radius: 12px; padding: 13px 15px; box-shadow: 0 24px 50px -18px rgba(14,22,38,.75); opacity: 0; pointer-events: none; transition: opacity .14s ease; }
+  .pop.show { opacity: 1; }
+  .pop .p-title { font-family: var(--grot); font-weight: 600; font-size: 13px; color: #F2F6FB; display: flex; align-items: center; gap: 8px; }
+  .pop .p-note { font-family: var(--mono); font-size: 10px; color: var(--teal); margin-top: 5px; }
+  .pop .p-steps { list-style: none; margin-top: 9px; display: flex; flex-direction: column; gap: 4px; }
+  .pop .p-steps li { display: flex; gap: 8px; align-items: baseline; font-size: 11.5px; line-height: 1.45; color: #B9C4D8; }
+  .pop .p-steps .dot { flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--teal); transform: translateY(1px); }
+  .pop .p-share { font-family: var(--mono); font-size: 9.5px; color: rgba(185,196,216,.55); margin-top: 9px; }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 820px) {
+    .app { height: 100dvh; padding: 12px 12px 10px; }
+    .top { grid-template-columns: 1fr auto; padding-bottom: 10px; }
+    h1 .sub { display: none; }
+    .tabbar { display: flex; }
+    .split { grid-template-columns: 1fr; }
+    .pane { display: none; }
+    .pane.show { display: block; }
+    .wall { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .rem-grid { grid-template-columns: 1fr; }
+    .headline-metric .stamp { font-size: 9.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .live-dot, .rcard.active .r-fillbar span::after { animation: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top">
+    <div>
+      <div class="eyebrow"><span class="live-dot"></span><span id="eyebrow">Project status</span></div>
+      <h1 id="title"></h1>
+    </div>
+    <div class="headline-metric">
+      <div class="pct"><span id="pct"></span><small>%</small></div>
+      <div class="stamp">Updated <b id="updated"></b></div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button data-pane="L" class="on">Milestones</button>
+    <button data-pane="R">Updates</button>
+  </div>
+
+  <div class="split">
+    <!-- LEFT: milestones -->
+    <div class="pane show" id="paneL">
+      <section class="panel stack-panel">
+        <div class="zone-label rem"><b id="remLabel">Remaining work</b><span>· each block = 1% · hover / tap for detail</span></div>
+        <div class="rem-grid" id="remGrid"></div>
+        <div class="waterline"><span class="wl-tag" id="wlTag">90% delivered</span><span class="wl-line"></span></div>
+        <div class="zone-label"><b id="delLabel">Delivered</b><span>· every brick = 1% of the project, already built</span></div>
+        <div class="wall" id="wall"></div>
+        <div class="glegend">
+          <div class="item"><span class="sw done"></span>Delivered brick — 1%</div>
+          <div class="item"><span class="sw active"></span>In progress</div>
+          <div class="item"><span class="sw pending"></span>Upcoming</div>
+        </div>
+      </section>
+      <div class="footnote" id="footnote"></div>
+    </div>
+
+    <!-- RIGHT: updates -->
+    <div class="pane" id="paneR">
+      <section class="panel">
+        <div class="panel-head"><h2>Progress over time</h2><span class="meta" id="histMeta"></span></div>
+        <div class="history-body">
+          <svg class="spark" id="spark" viewBox="0 0 600 90" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="spark-cap">each point is a daily update</div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Daily reports</h2><span class="meta">newest first</span></div>
+        <div id="reports"></div>
+      </section>
+    </div>
+  </div>
+</div>
+<div class="pop" id="pop" role="tooltip"></div>
+
+<!-- ============================================================
+   PROJECT DATA — edit this block only.
+
+   THE 1% RULE: every milestone has weight 1 and equals exactly
+   one percent of the project. 90 delivered bricks + 10 remaining
+   blocks = 100. To grow the project, add milestones — the math
+   re-normalizes automatically.
+
+   DAILY UPDATE: scroll to "updates", copy the last entry, paste
+   below it (newest last). Set date, overall progress (0–100),
+   notes. Headline, graph and reports update automatically.
+
+   ADD DETAIL: add items to any "substeps" — never moves the bar.
+   Only the "progress" number in the latest update does.
+
+   Per stage: zone "delivered"|"remaining", phase (group header
+   in the wall), status "done"|"active"|"pending",
+   fill 0–100 (% within an active stage).
+   ============================================================ -->
+<script>
+window.PROJECT = {
+  name: "NY Bottling ERP",
+
+  stages: [
+    { title: "System & architecture blueprint", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Full written system overview" }, { t: "Design principles & constraints documented" }, { t: "Clean architecture: API / Application / Domain / Infrastructure" }, { t: "Strict layer boundaries & dependency rules" }, { t: "Module map across the whole platform" }, { t: "Technology choices justified & recorded" }, { t: "Server / client responsibility split defined" } ] },
+    { title: "Data-model specification", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Every entity specified before any code" }, { t: "Relationships & ownership rules" }, { t: "Lifecycle rules per entity (draft → posted → closed)" }, { t: "All money stored in cents — no floating point" }, { t: "Naming & typing conventions" }, { t: "ID strategy defined (UUID v7)" }, { t: "Soft-delete & retention decisions" } ] },
+    { title: "Feature & UI specifications", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Feature spec for every module" }, { t: "Order, payment & return flows step-by-step" }, { t: "UI page specifications for all apps" }, { t: "Screen-by-screen field definitions" }, { t: "Role-based visibility rules per page" }, { t: "Edge cases & error states written down" }, { t: "Acceptance criteria per feature" } ] },
+    { title: "Offline-first architecture models", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Offline client architecture designed up-front" }, { t: "Sync strategy: deltas, queues, retries" }, { t: "Conflict-handling strategy on paper first" }, { t: "Device storage & recovery design" }, { t: "Temp-ID → real-ID promotion scheme" }, { t: "Which data lives on device vs server" }, { t: "Battery & bandwidth considerations" } ] },
+    { title: "Dev instructions & traceability", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Developer instructions & conventions" }, { t: "Code style & review rules" }, { t: "Folder & naming standards" }, { t: "Traceability matrix: every spec linked to code" }, { t: "Definition of done per work item" }, { t: "Branching & commit conventions" }, { t: "How-to guides for common tasks" } ] },
+    { title: "Chart of accounts & posting rules", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Ledger account structure designed" }, { t: "Account codes fixed in the domain (AccountCodes)" }, { t: "Double-entry posting rules for every business event" }, { t: "Order → invoice → payment → return flows mapped" }, { t: "Deposit & expense accounts included" }, { t: "Journal entry & line types defined" }, { t: "Weekly posting cycle designed" } ] },
+    { title: "AR, credit & cash accounting design", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Customer AR sub-ledger design" }, { t: "Account credit rules & application order" }, { t: "Order credit policies per customer" }, { t: "Over-credit detection rules" }, { t: "Salesperson cash & handover accounting" }, { t: "Handover status lifecycle" }, { t: "Expense categories defined" } ] },
+    { title: "Reconciliation & checkpoint design", phase: "Design & specification", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Checkpoint strategy for instant balances" }, { t: "When checkpoints are cut & rebuilt" }, { t: "Reconciliation pass design" }, { t: "Drift detection & tolerance rules" }, { t: "Repair path when drift is found" }, { t: "Balance-read performance targets" }, { t: "Audit trail of reconciliation runs" } ] },
+    { title: "Sales entities", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Customers with statuses & types" }, { t: "Multiple addresses per customer" }, { t: "Orders & order lines" }, { t: "Order kinds & status lifecycle" }, { t: "Back-order policies per customer" }, { t: "Invoices & invoice lines" }, { t: "Returns & return lines with types" } ] },
+    { title: "Money & ledger entities", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Payments with methods & statuses" }, { t: "Payment allocations across invoices" }, { t: "Payment links & saved payment methods" }, { t: "Journal entries & journal lines" }, { t: "Ledger accounts & checkpoints" }, { t: "Expenses with categories" }, { t: "Cash handovers with status tracking" } ] },
+    { title: "Beverage catalog entities", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Products with categories & subcategories" }, { t: "Bottle sizes & flavors" }, { t: "Per-case deposit fields on products" }, { t: "Category-level deposit defaults" }, { t: "Stock status tracking" }, { t: "Sellable flags" }, { t: "Customer favorites" } ] },
+    { title: "Logistics entities", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Routes & route templates" }, { t: "Delivery stops with statuses" }, { t: "Geofences for locations" }, { t: "Truck types with loading types" }, { t: "Pick lists & pick list items" }, { t: "Pallet plans & pallet items" }, { t: "Packing modes & damage types" } ] },
+    { title: "System entities", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Tasks with priorities, statuses & tags" }, { t: "Saved list views per user" }, { t: "Notifications & per-user preferences" }, { t: "Notification & document templates" }, { t: "Template fields, sections & messages" }, { t: "Audit log entries" }, { t: "Idempotency records & refresh tokens" } ] },
+    { title: "Relational schema & 31 migrations", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Complete schema across all 62 entities" }, { t: "31 versioned, replayable migrations" }, { t: "Forward-only migration discipline" }, { t: "Schema evolves without data loss" }, { t: "Migration verification scripts" }, { t: "Pending-migration inspection tooling" }, { t: "Same schema mirrored on-device" } ] },
+    { title: "Indexes, constraints & sequences", phase: "Domain & database", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Indexes tuned for lists, filters & sync" }, { t: "Foreign keys on every relationship" }, { t: "Integrity constraints via dedicated SQL" }, { t: "Unique constraints on business keys" }, { t: "Gapless document numbering sequences" }, { t: "Per-document-type sequence counters" }, { t: "Integrity preflight checks before deploys" } ] },
+    { title: "Authentication & credentials", phase: "Security core", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "JWT access + refresh token flow" }, { t: "Refresh token rotation & revocation" }, { t: "Bcrypt password hashing" }, { t: "Secure credential storage" }, { t: "Login for every app (Office, Field, Warehouse)" }, { t: "Session expiry handling" }, { t: "Auth middleware on every protected route" } ] },
+    { title: "Roles & permissions", phase: "Security core", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "User roles across the platform" }, { t: "Actor roles for business actions" }, { t: "Permission checks on every endpoint" }, { t: "Role-based UI (RequireRole components)" }, { t: "Admin-only areas locked down" }, { t: "Salesperson vs driver vs office scoping" }, { t: "Field-scope rules for data visibility" } ] },
+    { title: "Device registration", phase: "Security core", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Device identity & registration flow" }, { t: "Per-device tracking on the server" }, { t: "Warehouse device statuses" }, { t: "Device management endpoints" }, { t: "Device-to-user binding" }, { t: "Revoke / deactivate lost devices" }, { t: "Device info in sync & audit trails" } ] },
+    { title: "Territory data scoping", phase: "Security core", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Territory filter middleware" }, { t: "Each user sees only their territory's data" }, { t: "Applied automatically to list endpoints" }, { t: "Salesperson-level customer scoping" }, { t: "No client-side trust — enforced on server" }, { t: "Works with saved views & filters" }, { t: "Consistent scoping across all 3 apps" } ] },
+    { title: "Validation & error conventions", phase: "API platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Request validators on all mutating calls" }, { t: "Order / payment / return validators" }, { t: "Statement & adjustment validators" }, { t: "Consistent error response model" }, { t: "Field-level validation messages" }, { t: "Global exception middleware" }, { t: "Client-friendly error surfaces (EndpointError)" } ] },
+    { title: "Middleware & idempotency", phase: "API platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Idempotency middleware on mutations" }, { t: "Idempotency records stored per request" }, { t: "Safe retries — no double writes, ever" }, { t: "Critical for offline sync replays" }, { t: "Auth middleware in the pipeline" }, { t: "Exception middleware with clean errors" }, { t: "Territory filter in the same pipeline" } ] },
+    { title: "Domain events", phase: "API platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "OrderCreated event" }, { t: "InvoicePosted event" }, { t: "PaymentReceived event" }, { t: "OverCredit & OverdueDetected events" }, { t: "BackOrderCreated event" }, { t: "StatementSent event" }, { t: "Events drive notifications & jobs" } ] },
+    { title: "Scheduled jobs", phase: "API platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Weekly ledger posting job" }, { t: "Back-order maintenance job" }, { t: "Scheduled notification job" }, { t: "Jobs run on the server clock" }, { t: "Safe re-runs via idempotency" }, { t: "Job logging for traceability" }, { t: "Failures surface to audit/logs" } ] },
+    { title: "Customers API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Customer CRUD with statuses" }, { t: "Multiple addresses per customer" }, { t: "Customer types & assignment" }, { t: "Per-customer price level binding" }, { t: "Per-customer template assignment" }, { t: "Notification rules per customer" }, { t: "Search, filter & paging" } ] },
+    { title: "Orders & back-orders API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Order create / edit / lifecycle" }, { t: "Order kinds & credit policy checks" }, { t: "Line-level pricing & deposits" }, { t: "Back-order creation & policies" }, { t: "Back-order fulfillment endpoints" }, { t: "Order documents & numbering" }, { t: "Filtering by customer, status & date" } ] },
+    { title: "Invoices API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Invoice generation from orders" }, { t: "Invoice posting to the ledger" }, { t: "Payment status per invoice" }, { t: "Outstanding invoice queries" }, { t: "Invoice documents (print / PDF)" }, { t: "Per-customer invoice filtering" }, { t: "Invoice line detail with deposits" } ] },
+    { title: "Payments & payment links API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Payment capture with methods" }, { t: "Allocation across invoices" }, { t: "Account-credit application" }, { t: "Payment links: create, send, track status" }, { t: "Saved payment methods" }, { t: "Card charges via gateway" }, { t: "Payment documents & receipts" } ] },
+    { title: "Cash & accounting API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Salesperson cash balance endpoints" }, { t: "Cash handover create & confirm" }, { t: "Handover status flow" }, { t: "Expense recording" }, { t: "Ledger & journal endpoints" }, { t: "Accounting queries for balances" }, { t: "Checkpoint-backed fast reads" } ] },
+    { title: "Catalog & products API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Products with sizes & flavors" }, { t: "Categories & subcategories" }, { t: "Deposit info on catalog items" }, { t: "Stock status exposure" }, { t: "Sellable filtering per customer level" }, { t: "Favorites endpoints" }, { t: "Catalog search & paging" } ] },
+    { title: "Pricing & discounts API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Price levels CRUD" }, { t: "Price-level items per product" }, { t: "Customer price-level assignment" }, { t: "Price resolution endpoint" }, { t: "Discount caps by level & scope" }, { t: "Discount types & contexts" }, { t: "Pricing conflict rules" } ] },
+    { title: "Returns & adjustments API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Return create with types" }, { t: "Return lines with deposits" }, { t: "Return status lifecycle" }, { t: "Damage type recording" }, { t: "Inventory adjustments with types" }, { t: "Stock corrections" }, { t: "Return documents" } ] },
+    { title: "Delivery & routes API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Routes & route templates" }, { t: "Delivery stops & status updates" }, { t: "Route status lifecycle" }, { t: "Stop-level delivery confirmation" }, { t: "Geofence data" }, { t: "Truck type & loading info" }, { t: "Today's-deliveries queries" } ] },
+    { title: "Warehouse APIs", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Pick list generation & retrieval" }, { t: "Pick status updates per item" }, { t: "Pallet plan endpoints" }, { t: "Packing mode handling" }, { t: "Receipt endpoints" }, { t: "Warehouse device status" }, { t: "Back-order aware picking" } ] },
+    { title: "Reports API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Report data endpoints" }, { t: "Aging report rows" }, { t: "Customer statement generation" }, { t: "Bulk statement endpoints" }, { t: "Reconciliation report access" }, { t: "Balance & AR summaries" }, { t: "Data shaped for app report pages" } ] },
+    { title: "Sync & conflicts API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Delta sync for every synced entity" }, { t: "Cursor/version based pulls" }, { t: "Mutation push endpoints" }, { t: "Idempotent replay handling" }, { t: "Conflict detection & queue" }, { t: "Conflict resolution strategies" }, { t: "Enum normalization across platforms" } ] },
+    { title: "Notifications & templates API", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Notification center endpoints" }, { t: "Per-user notification preferences" }, { t: "Notification templates CRUD" }, { t: "Document template management" }, { t: "Template fields & sections" }, { t: "Tasks & saved views endpoints" }, { t: "Message placement rules" } ] },
+    { title: "Admin APIs", phase: "API modules — 149 endpoints", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "User management" }, { t: "Device management" }, { t: "Company settings" }, { t: "Audit log access & filtering" }, { t: "Sales people administration" }, { t: "Customer types administration" }, { t: "Settings that drive app behavior" } ] },
+    { title: "Double-entry ledger engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Every event books balanced journal entries" }, { t: "Journal entry & line types" }, { t: "Automatic postings from invoices" }, { t: "Automatic postings from payments & returns" }, { t: "Adjustment postings" }, { t: "Posting status tracked per invoice" }, { t: "Weekly posting job integration" } ] },
+    { title: "Reconciliation & aging engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Reconciliation service with drift reports" }, { t: "Drift rows pinpoint exact differences" }, { t: "Checkpoint rebuild on demand" }, { t: "Aging buckets: current / 30 / 60 / 90+" }, { t: "Aging per customer & overall" }, { t: "Overdue detection events" }, { t: "Feeds statements & collections" } ] },
+    { title: "Credit engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Account credit balance per customer" }, { t: "Credit application to invoices" }, { t: "Order credit policies enforced" }, { t: "Over-credit events raised" }, { t: "Credit bar UI in both apps" }, { t: "Works offline via local credit service" }, { t: "Credit history traceable in ledger" } ] },
+    { title: "Flexible price-level system", phase: "Business engines", zone: "delivered", weight: 1, status: "done", note: "complex under the hood, simple to use",
+      substeps: [ { t: "Named price levels with priority & default" }, { t: "Per-product price on every level" }, { t: "Sellable flag — a level controls what each customer can even buy" }, { t: "Per-customer level assignment" }, { t: "One price-resolution engine for every app" }, { t: "Identical resolution online & offline" }, { t: "Pricing conflict rules for overlaps" }, { t: "Wired through 42 files across the system" } ] },
+    { title: "Bottle deposit system", phase: "Business engines", zone: "delivered", weight: 1, status: "done", note: "deposits tracked end-to-end, cent-accurate",
+      substeps: [ { t: "Per-case deposit on products" }, { t: "Category-level deposit defaults" }, { t: "Deposit per line on orders & invoices" }, { t: "Deposit totals per document" }, { t: "Deposit credited back on bottle returns" }, { t: "Dedicated deposit account in the ledger" }, { t: "Deposits on printed documents & statements" } ] },
+    { title: "Discount engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Discount caps by level & scope" }, { t: "Discount types (percent / amount)" }, { t: "Discount contexts: who, what, when" }, { t: "Cap enforcement at entry time" }, { t: "Salesperson discount limits" }, { t: "Consistent rules online & offline" }, { t: "Discount visibility on documents" } ] },
+    { title: "Inventory & stock engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Stock status per product" }, { t: "Inventory adjustments with types" }, { t: "Adjustment audit trail" }, { t: "Back-order integration on shortage" }, { t: "Stock visibility in catalog" }, { t: "Warehouse pick integration" }, { t: "Damage recording on returns" } ] },
+    { title: "Statement engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Customer statements with full history" }, { t: "Statement lines from ledger data" }, { t: "Bulk statement generation" }, { t: "Statement documents for print & send" }, { t: "StatementSent events" }, { t: "Gapless document numbering" }, { t: "Numbering per document type (invoice, order, receipt)" } ] },
+    { title: "Route planning & delivery engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Route planning service" }, { t: "Route templates for repeat runs" }, { t: "Stop sequencing per route" }, { t: "Delivery status per stop" }, { t: "Proof of delivery capture" }, { t: "Signed receipts stored" }, { t: "Geofence-aware arrivals" } ] },
+    { title: "Back-order engine", phase: "Business engines", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Back-order creation on shortage" }, { t: "Per-customer back-order policies" }, { t: "Policy status lifecycle" }, { t: "Fulfillment when stock returns" }, { t: "Maintenance job keeps queue clean" }, { t: "BackOrderCreated events" }, { t: "Visibility in office & warehouse apps" } ] },
+    { title: "USAePay gateway — live & tested", phase: "Integrations & data layer", zone: "delivered", weight: 1, status: "done", note: "the payment gateway is DONE — remaining item is only ACH & UX additions",
+      substeps: [ { t: "Full card-processing integration" }, { t: "Charge, capture & result handling" }, { t: "Saved-method charging" }, { t: "Payment link card payments" }, { t: "Secrets provisioning for gateway keys" }, { t: "Tested end-to-end with scripts" }, { t: "Functional in production today" } ] },
+    { title: "Email framework — code complete", phase: "Integrations & data layer", zone: "delivered", weight: 1, status: "done", note: "live SMTP hookup still pending — needs client IT (see remaining work)",
+      substeps: [ { t: "SMTP sender implemented in code" }, { t: "Configurable email options" }, { t: "Safe no-op sender for dev & test" }, { t: "Statement sending by email wired" }, { t: "Notification emails wired" }, { t: "Template-driven message bodies" }, { t: "Only the live SMTP credentials/hookup remain" } ] },
+    { title: "Repository layer — 38 repositories", phase: "Integrations & data layer", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "One repository per aggregate" }, { t: "Clean separation from business logic" }, { t: "Customers, orders, invoices, payments repos" }, { t: "Ledger, checkpoint & audit repos" }, { t: "Catalog, pricing & discount repos" }, { t: "Logistics: routes, picking, pallets repos" }, { t: "Consistent query & transaction patterns" } ] },
+    { title: "Audit trail infrastructure", phase: "Integrations & data layer", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Every important change recorded" }, { t: "Who / what / when on each entry" }, { t: "Audit across all modules" }, { t: "Tagged entity types for lookup" }, { t: "Admin audit-log browser" }, { t: "Local on-device audit for offline actions" }, { t: "Immutable append-only records" } ] },
+    { title: "Office shell, auth & navigation", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "App shell with sidebar & top bar" }, { t: "Login & session handling" }, { t: "Navigation across 29 pages" }, { t: "Cross-links between related records" }, { t: "Toasts & error boundaries" }, { t: "Status badges & money displays" }, { t: "Delivered before the sync engine as a standalone app" } ] },
+    { title: "List-view engine & filters", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "One reusable list engine for every table" }, { t: "Advanced filter panel" }, { t: "Column sorting & row counts" }, { t: "Saved views per user" }, { t: "Paging on large datasets" }, { t: "Async number cells for live totals" }, { t: "Same engine across customers, orders, invoices" } ] },
+    { title: "Dashboard & charts", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Dashboard landing page" }, { t: "Charts for key numbers" }, { t: "KPI figures at a glance" }, { t: "Aging badges on customers" }, { t: "Recent activity surfaces" }, { t: "Credit bars where relevant" }, { t: "Fast loads via checkpointed balances" } ] },
+    { title: "Customer pages", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Customer list with advanced tools" }, { t: "Customer detail with tabs" }, { t: "Addresses & contact management" }, { t: "Price level & templates per customer" }, { t: "Aging & balance visibility" }, { t: "New-customer modal flow" }, { t: "Per-customer actions" } ] },
+    { title: "Order & invoice pages", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Order list & order detail" }, { t: "New-order modal flow" }, { t: "Invoice list & invoice detail" }, { t: "Outstanding invoices page" }, { t: "Line-level views with deposits" }, { t: "Document actions per record" }, { t: "Status badges & timelines" } ] },
+    { title: "Payments & collections pages", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Payments page with allocation view" }, { t: "Payment links management page" }, { t: "Collections workflow page" }, { t: "Record-payment flows" }, { t: "Account credit visibility" }, { t: "Gateway charges from the office" }, { t: "Receipts & payment documents" } ] },
+    { title: "Returns & reports pages", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Returns management page" }, { t: "Return detail with lines & deposits" }, { t: "Reports page" }, { t: "Aging & AR views" }, { t: "Statement access & sending" }, { t: "Balance drill-downs" }, { t: "Export-ready data views" } ] },
+    { title: "Tasks, templates & notifications", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Tasks page with priorities & tags" }, { t: "Template management page" }, { t: "Template editor with live preview" }, { t: "Bulk template assignment" }, { t: "Notification center" }, { t: "Notification preferences page" }, { t: "Customer notification rules" } ] },
+    { title: "Admin suite — 9 pages", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Users administration" }, { t: "Sales people administration" }, { t: "Customer types" }, { t: "Catalog administration" }, { t: "Price levels & discount caps pages" }, { t: "Notification templates admin" }, { t: "Company settings & audit log pages" } ] },
+    { title: "Document preview & printing", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Document preview component" }, { t: "Print-ready invoices & statements" }, { t: "Document actions (print / download / send)" }, { t: "Template-driven rendering" }, { t: "Deposit & totals sections" }, { t: "Company header on documents" }, { t: "Tested with dedicated component tests" } ] },
+    { title: "Office deployed to production", phase: "Office app — built first, standalone", zone: "delivered", weight: 1, status: "done", badge: "Deployed",
+      substeps: [ { t: "Live & functioning today" }, { t: "Used as the system of record" }, { t: "Real users working in it daily" }, { t: "Production auth & roles active" }, { t: "Serving all 29 pages" }, { t: "Stable under real workloads" }, { t: "Feedback loop already running" } ] },
+    { title: "On-device database (Dexie)", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Full IndexedDB store on the device" }, { t: "Typed row schemas for every table" }, { t: "Mirrors the server data model" }, { t: "Instant local reads — no network wait" }, { t: "Survives app restarts & crashes" }, { t: "Storage sized for full working data" }, { t: "Foundation for true offline work" } ] },
+    { title: "Offline backup redundancy", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Offline backup service" }, { t: "Second copy in device storage" }, { t: "Fallback if primary store corrupts" }, { t: "Data-restore gate on app start" }, { t: "Automatic recovery flow" }, { t: "Protects unsynced work" }, { t: "Designed for worst-case device events" } ] },
+    { title: "Sync engine core", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Background sync engine" }, { t: "Sync scheduler with smart timing" }, { t: "Pull deltas, push mutations" }, { t: "Retry with backoff on failures" }, { t: "Works over flaky connections" }, { t: "System clock abstraction for testability" }, { t: "Console logging for diagnostics" } ] },
+    { title: "Mutation queue", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Every offline action stored locally" }, { t: "Queue replays in order on reconnect" }, { t: "Mutation payload builder" }, { t: "Exactly-once semantics via idempotency" }, { t: "Failed mutations kept, never lost" }, { t: "Queue visible to sync status UI" }, { t: "Handles long offline stretches" } ] },
+    { title: "Delta sync & normalization", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Delta upserter applies server changes" }, { t: "Only changed rows transferred" }, { t: "Enum case normalization across platforms" }, { t: "Merge order preserves local edits" }, { t: "Efficient on bandwidth & battery" }, { t: "Incremental catch-up after downtime" }, { t: "Consistent state across devices" } ] },
+    { title: "Offline identity allocation", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Temp-ref allocator for offline creates" }, { t: "Offline records get real IDs on sync" }, { t: "UUID v7 generation on device" }, { t: "References fixed up across related rows" }, { t: "Orders created offline link correctly" }, { t: "No collisions across devices" }, { t: "Transparent to the user" } ] },
+    { title: "Sync state & problem surfacing", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Order sync-state tracking" }, { t: "Per-record sync badges in UI" }, { t: "Sync problem notifier" }, { t: "Clear user messaging on issues" }, { t: "Conflict routing to office queue" }, { t: "Sync status hook for any screen" }, { t: "Nothing fails silently" }, { t: "Exact display of sync errors (new)" }, { t: "Clear list of not-synced entries while offline (new)" } ] },
+    { title: "Live data hooks", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Live queries — UI updates as data syncs" }, { t: "useLiveQuery across pages" }, { t: "Badge counts update in real time" }, { t: "Sync status hook" }, { t: "Auth & services hooks" }, { t: "Header & overlay hooks" }, { t: "Reactive UI without manual refresh" } ] },
+    { title: "Local money services", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Offline orders service" }, { t: "Offline payments service" }, { t: "Offline ledger postings" }, { t: "Offline pricing resolution" }, { t: "Offline discount enforcement" }, { t: "Offline credit checks" }, { t: "Same rules as the server, on-device" } ] },
+    { title: "Local ops services", phase: "Offline platform", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Offline returns service" }, { t: "Offline delivery service" }, { t: "Offline product/catalog service" }, { t: "Offline tasks service" }, { t: "Offline audit capture" }, { t: "Offline salesperson cash service" }, { t: "Full workday possible with zero signal" } ] },
+    { title: "Field shell, session & PWA", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Installable offline-first PWA" }, { t: "App shell with bottom navigation" }, { t: "Session & offline auth" }, { t: "Role-gated screens (RequireRole)" }, { t: "Search, chips & count badges" }, { t: "Empty states & error boundaries" }, { t: "KPI tiles on home" } ] },
+    { title: "Order wizard", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Guided multi-step order creation" }, { t: "Product line sheet with search" }, { t: "Line editor with quantities & pricing" }, { t: "Deposits calculated per line" }, { t: "Credit bar & policy checks inline" }, { t: "Delivery date & address selection" }, { t: "Works fully offline" } ] },
+    { title: "Return wizard", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Guided return flow" }, { t: "Line-level return detail" }, { t: "Return types & damage recording" }, { t: "Deposit credit on bottle returns" }, { t: "Links back to original documents" }, { t: "Status timeline visibility" }, { t: "Offline-capable end to end" } ] },
+    { title: "Payment screen", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Card, cash & account credit" }, { t: "Payment sheet flow" }, { t: "Gateway-integrated card charging" }, { t: "Allocation to invoices" }, { t: "Receipt generation after payment" }, { t: "Saved methods support" }, { t: "Offline cash recording with later sync" } ] },
+    { title: "Customer & balance pages", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Customer list with search" }, { t: "Customer profile page" }, { t: "Balance report per customer" }, { t: "Aging visibility in the field" }, { t: "Order & payment history" }, { t: "Customer cards with key figures" }, { t: "Notifications page" } ] },
+    { title: "Salesperson cash views", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Salesperson balance page" }, { t: "Cash collected today at a glance" }, { t: "Handover preparation view" }, { t: "Expense recording" }, { t: "Balance report page" }, { t: "Cash reconciled with office" }, { t: "Ledger-backed accuracy" } ] },
+    { title: "Printing, PDFs & previews", phase: "Field app", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Bluetooth receipt printing" }, { t: "Receipt formatter & render plans" }, { t: "On-device PDF generation" }, { t: "Document previews before send" }, { t: "Signature pad capture on delivery" }, { t: "Invoice / order / receipt documents" }, { t: "Template-driven layouts" } ] },
+    { title: "Field app deployed", phase: "Field app", zone: "delivered", weight: 1, status: "done", badge: "Deployed",
+      substeps: [ { t: "Live & functioning in production" }, { t: "18 pages total" }, { t: "Installable on any phone" }, { t: "Offline-first from day one" }, { t: "Real routes run on it" }, { t: "Sync engine active in the wild" }, { t: "Foundation for driver variant" } ] },
+    { title: "Warehouse handheld screens", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done", note: "finalizing remains above the line",
+      substeps: [ { t: "Picker device screen" }, { t: "Pick list execution flow" }, { t: "Pick status per item" }, { t: "Manager handheld workflows" }, { t: "Pick-list review modal" }, { t: "Warehouse device status handling" }, { t: "API services wired for all flows" } ] },
+    { title: "Warehouse dashboard & config", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Warehouse dashboard screen" }, { t: "Configuration screen" }, { t: "Device setup & binding" }, { t: "Pallet & packing visibility" }, { t: "Back-order awareness" }, { t: "Route/loading context" }, { t: "Role-gated access" } ] },
+    { title: "Driver app core", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done", note: "field-app variant; finalizing remains above the line",
+      substeps: [ { t: "Built on the field app platform" }, { t: "Restricted navigation for driver role" }, { t: "Driver route page & stop detail" }, { t: "Delivery status updates & today's deliveries" }, { t: "Proof-of-delivery & signature on the glass" }, { t: "Same sync, offline & printing machinery" }, { t: "Shares one codebase — fixes land everywhere" } ] },
+    { title: "Legacy data access & extraction", phase: "Migration groundwork", zone: "delivered", weight: 1, status: "done", note: "source: a 10-year-old Windows desktop app",
+      substeps: [ { t: "Accessed the legacy system's server" }, { t: "Located the needed data across its tables" }, { t: "Extraction pipeline for the required data" }, { t: "Mapped where each piece lives in the old system" }, { t: "Identified tables to combine, split — or both" }, { t: "Flagged features that work differently between systems" }, { t: "Raw extracts secured for repeat runs" } ] },
+    { title: "Test suites — 112 files", phase: "Quality & operations", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Server service-level tests" }, { t: "Office app unit tests" }, { t: "Field app unit tests" }, { t: "Warehouse app unit tests" }, { t: "End-to-end test suite" }, { t: "Shared test fixtures" }, { t: "Document preview component tests" } ] },
+    { title: "35 scripted API scenarios", phase: "Quality & operations", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "test-00 → test-35 shell scenarios" }, { t: "Full API behavior verified end-to-end" }, { t: "Order → invoice → payment chains" }, { t: "Return & deposit scenarios" }, { t: "Sync & conflict scenarios" }, { t: "Gateway payment scripts" }, { t: "Repeatable against any environment" } ] },
+    { title: "Seed, demo & integrity tooling", phase: "Quality & operations", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Seed & demo data generators" }, { t: "Catalog SQL generation & loaders" }, { t: "Reference data dumps" }, { t: "Integrity preflight SQL" }, { t: "Constraint-adding scripts" }, { t: "Migration verification tooling" }, { t: "Demo wipe & rebuild scripts" } ] },
+    { title: "Secrets & VM provisioning", phase: "Quality & operations", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "Secrets provisioning scripts" }, { t: "Secret encryption on the VM" }, { t: "Gateway key management" }, { t: "Secret migration between hosts" }, { t: "VM preflight checks" }, { t: "VM publish & migrate tooling" }, { t: "CORS & static app configuration" } ] },
+    { title: "CI & deployment pipeline", phase: "Quality & operations", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "CI script for automated checks" }, { t: "Server deploy script" }, { t: "VM migration apply tooling" }, { t: "App publish flows" }, { t: "Repeatable releases" }, { t: "Rollback-friendly migrations" }, { t: "One-command server deployment" } ] },
+    { title: "Production hosting live", phase: "Quality & operations", zone: "delivered", weight: 1, status: "done",
+      substeps: [ { t: "All environments provisioned" }, { t: "Server serving in production" }, { t: "All apps hosted & reachable" }, { t: "Logs & diagnostics in place" }, { t: "Secrets locked down" }, { t: "Real data flowing daily" }, { t: "Uptime through the whole build" } ] },
+
+    /* ===== REMAINING WORK — 10 blocks × 1% ===== */
+    { title: "Payments — ACH & UX additions", zone: "remaining", weight: 1, status: "active", fill: 75,
+      note: "gateway was already live — additions nearly done: fund-allocation flow rework & final tests remain",
+      substeps: [ { t: "ACH wired", done: true }, { t: "Secure bank-info saving in both apps", done: true }, { t: "Add-card & saved-card flows", done: true }, { t: "Payment links available in more flows", done: true }, { t: "Payment UX made easier to use", done: true }, { t: "Rework fund-allocation flow", done: false }, { t: "Finish & pass all payment tests", done: false } ] },
+    { title: "Field app UI", zone: "remaining", weight: 1, status: "active", fill: 70,
+      note: "mostly ready — UI touch-ups from the field list",
+      substeps: [ { t: "Keyboard no longer hides inputs", done: true }, { t: "Smart back, auto-focus, fewer taps — Android & iOS", done: true }, { t: "Expand/collapse editable cart in the order builder", done: true }, { t: "Edit-order options fully wired", done: true }, { t: "Open-cart flow", done: true }, { t: "Empty fill box & discount bar", done: false }, { t: "Today's deliveries view", done: false }, { t: "Returns, orders & accuracy pass", done: false } ] },
+    { title: "Office app UI", zone: "remaining", weight: 1, status: "active", fill: 25,
+      note: "UI touch-ups (grouped)",
+      substeps: [ { t: "Navigation quirks & UI bugs — mostly fixed", done: true }, { t: "Discount caps tightened — simpler to use & read", done: true }, { t: "Customers: advanced sort, groups, per-customer actions", done: false }, { t: "Orders, returns & invoices improvements", done: false }, { t: "Payments, credit & pricing display", done: false }, { t: "Statements: options, filters & print", done: false }, { t: "Catalog: stock & deposit display, promotions", done: false }, { t: "Tables aligned, dropdowns fixed, UI polish", done: false }, { t: "Notifications, tasks & triggers everywhere", done: false }, { t: "Complete live SMTP email hookup — with client IT help", done: false }, { t: "Sales-people reports & actions", done: false } ] },
+    { title: "Accuracy testing", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "final number accuracy via UI — draft plan, confirm with me",
+      substeps: [ { t: "Number accuracy verified through the UI" }, { t: "Order → invoice totals cross-checked" }, { t: "Payment allocation math verified" }, { t: "Deposit totals verified end-to-end" }, { t: "Ledger balances vs UI figures compared" }, { t: "Aging & statement figures checked" }, { t: "Sign-off checklist per module" } ] },
+    { title: "Security review", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "vulnerability pass, MFA, sessions",
+      substeps: [ { t: "Full integrity & vulnerability review" }, { t: "Auth & session hardening pass" }, { t: "Patch anything found" }, { t: "MFA implementation" }, { t: "Improved session handling" }, { t: "Rate limiting & abuse checks" }, { t: "Review of secrets & permissions" } ] },
+    { title: "Migration", zone: "remaining", weight: 1, status: "active", fill: 15,
+      note: "server access & extraction already done (see wall) — old & new systems will run side-by-side, so migration repeats until cutover",
+      substeps: [ { t: "Clean & normalize the extracted data" }, { t: "Combine & split tables to fit the new model — some need both" }, { t: "Reconcile features that don't work the same in both systems" }, { t: "Script the loading into the new schema" }, { t: "Integrity checks after every load" }, { t: "Build a repeatable model for constant iterations of new data" }, { t: "Re-run iterations while both systems are used simultaneously" }, { t: "Final cutover when the new system fully takes over" } ] },
+    { title: "Finalize Warehouse app", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "built — draft finishing list, confirm with me",
+      substeps: [ { t: "Complete remaining screens & flows" }, { t: "Wire all picking edge cases" }, { t: "Pallet & packing finish work" }, { t: "Device configuration polish" }, { t: "Manager workflow completion" }, { t: "On-floor testing with real picks" }, { t: "Performance & usability pass" } ] },
+    { title: "Finalize Driver app", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "built — draft finishing list, confirm with me",
+      substeps: [ { t: "Complete driver-specific features" }, { t: "Navigation restrictions finalized" }, { t: "Delivery flow edge cases" }, { t: "Proof-of-delivery polish" }, { t: "Offline behavior on the road" }, { t: "Route-day testing with real stops" }, { t: "Performance & usability pass" } ] },
+    { title: "Handover & feedback", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "handover, then gather & act on feedback",
+      substeps: [ { t: "Handover to client" }, { t: "Admin & user walkthroughs" }, { t: "Documentation handed over" }, { t: "Gather feedback from real use" }, { t: "Prioritize feedback items" }, { t: "Address agreed feedback" }, { t: "Close-out review together" } ] },
+    { title: "Executive report portal", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "after handover · mostly front-end on existing data",
+      substeps: [ { t: "Report views & dashboards" }, { t: "Assemble existing system data" }, { t: "Sales & AR summaries" }, { t: "Route & delivery insights" }, { t: "Deposit & inventory views" }, { t: "Access control for executives" }, { t: "Mostly front-end — server data already exists" } ] }
+  ],
+
+  /* ---- DAILY REPORTS — newest entry goes LAST. Replace the sample with real ones. ---- */
+  updates: [
+    { date: "2026-07-12", progress: 90,
+      notes: [
+        "Progress dashboard created — baseline set at 90% delivered",
+        "Migration groundwork already complete: legacy server access & data extraction"
+      ] },
+    { date: "2026-07-14", progress: 91.9,
+      notes: [
+        "Payments: add-card & saved-card flows, payment links in more flows — easier to use",
+        "ACH wired + secure bank-info saving in both apps; remaining: fund-allocation rework & final tests",
+        "Office: most navigation quirks & UI bugs fixed",
+        "Smart back, keyboard overlay & auto-focus, fewer taps for options — Android & iOS",
+        "Discount caps tightened — simpler to use and read",
+        "Sync engine: exact error display + clear list of not-synced entries when offline",
+        "Field: edit-order options wired; expand/collapse editable cart in order builder"
+      ] }
+  ]
+};
+</script>
+
+<script>
+(function () {
+  const P = window.PROJECT;
+  if (!P) { document.body.innerHTML = '<p style="padding:40px;font-family:monospace">data missing</p>'; return; }
+
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const fmtDate = s => { const [y,m,d] = s.split("-").map(Number); return d+" "+MONTHS[m-1]+" "+y; };
+  const fmtP = n => (Math.round(n * 10) / 10).toString();
+  const LABEL = { done: "Delivered", active: "In progress", pending: "Upcoming" };
+
+  document.getElementById("eyebrow").textContent = "Project status";
+  document.getElementById("title").innerHTML = P.name + '<span class="sub">Wholesale beverage platform · accounting, billing &amp; distribution</span>';
+  document.title = P.name + " — project status";
+
+  const stages = P.stages;
+  const totalW = stages.reduce((s, m) => s + (m.weight || 0), 0) || 1;
+  const delivered = stages.filter(s => s.zone === "delivered");
+  const remaining = stages.filter(s => s.zone !== "delivered");
+  const delTrueW = delivered.reduce((s, m) => s + (m.weight || 0), 0) / totalW * 100;
+
+  const updates = [...(P.updates || [])].sort((a, b) => a.date < b.date ? -1 : 1);
+  const latest = updates[updates.length - 1];
+  let progress = latest ? latest.progress
+    : stages.reduce((s, m) => s + (m.weight/totalW*100) * (m.status==="done"?100:(m.fill||0))/100, 0);
+  progress = Math.max(0, Math.min(100, progress));
+  document.getElementById("pct").textContent = fmtP(progress);
+  document.getElementById("updated").textContent = latest ? fmtDate(latest.date) : "—";
+  document.getElementById("wlTag").textContent = fmtP(delTrueW) + "% delivered — " + delivered.length + " bricks";
+  document.getElementById("remLabel").textContent = "Remaining work — " + remaining.length + " blocks";
+  document.getElementById("delLabel").textContent = "Delivered — " + delivered.length + " milestones";
+
+  /* ---- REMAINING CARDS ---- */
+  const remGrid = document.getElementById("remGrid");
+  remaining.forEach((m, i) => {
+    const card = document.createElement("div");
+    card.className = "rcard " + (m.status || "pending");
+    card.tabIndex = 0;
+    const steps = (m.substeps && m.substeps.length)
+      ? '<ul class="r-steps">' + m.substeps.map(s => '<li class="' + (s.done ? "done" : "") + '"><span class="dot"></span><span>' + s.t + '</span></li>').join("") + '</ul>'
+      : '<div class="r-note" style="font-style:italic">Detailed steps added as this stage is planned.</div>';
+    card.innerHTML =
+      '<div class="r-top">' +
+        '<span class="r-seq">' + String(i + 1).padStart(2, "0") + '</span>' +
+        '<span class="r-name">' + m.title + '</span>' +
+        '<span class="r-status">' + (LABEL[m.status] || "Upcoming") +
+          (m.status === "active" && m.fill ? " " + fmtP(m.fill) + "%" : "") + '</span>' +
+      '</div>' +
+      (m.status === "active" && m.fill ? '<div class="r-fillbar"><span style="width:' + m.fill + '%"></span></div>' : '') +
+      '<div class="r-detail">' +
+        (m.note ? '<div class="r-note">' + m.note + '</div>' : '') + steps +
+        '<div class="r-share">1% of project</div>' +
+      '</div>';
+    card.addEventListener("click", () => card.classList.toggle("open"));
+    remGrid.appendChild(card);
+  });
+
+  /* ---- BRICK WALL + POPOVER ---- */
+  const wall = document.getElementById("wall");
+  const pop = document.getElementById("pop");
+  let lit = null, hideTimer = null;
+
+  function showPop(brick, m) {
+    clearTimeout(hideTimer);
+    if (lit) lit.classList.remove("lit");
+    lit = brick; brick.classList.add("lit");
+    pop.innerHTML =
+      '<div class="p-title">' + m.title + (m.badge ? '<span class="b-badge">' + m.badge + '</span>' : '') + '</div>' +
+      (m.note ? '<div class="p-note">' + m.note + '</div>' : '') +
+      ((m.substeps && m.substeps.length)
+        ? '<ul class="p-steps">' + m.substeps.map(s => '<li><span class="dot"></span><span>' + s.t + '</span></li>').join("") + '</ul>' : '') +
+      '<div class="p-share">1% of project · delivered</div>';
+    const r = brick.getBoundingClientRect();
+    pop.classList.add("show");
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let x = r.right + 10;
+    if (x + pw > window.innerWidth - 12) x = r.left - pw - 10;
+    if (x < 12) x = Math.min(Math.max(12, r.left), window.innerWidth - pw - 12);
+    let y = r.top + r.height / 2 - ph / 2;
+    y = Math.max(12, Math.min(y, window.innerHeight - ph - 12));
+    pop.style.left = x + "px"; pop.style.top = y + "px";
+  }
+  function hidePop() {
+    hideTimer = setTimeout(() => {
+      pop.classList.remove("show");
+      if (lit) { lit.classList.remove("lit"); lit = null; }
+    }, 120);
+  }
+
+  let lastPhase = null;
+  delivered.forEach(m => {
+    if (m.phase && m.phase !== lastPhase) {
+      lastPhase = m.phase;
+      const ph = document.createElement("div");
+      ph.className = "phase-head"; ph.textContent = m.phase;
+      wall.appendChild(ph);
+    }
+    const brick = document.createElement("div");
+    brick.className = "brick"; brick.tabIndex = 0;
+    brick.innerHTML = '<span class="b-name">' + m.title + '</span>' +
+      (m.badge ? '<span class="b-badge">' + m.badge + '</span>' : '<span class="b-tick">✓</span>');
+    brick.__m = m;
+    brick.addEventListener("mouseenter", () => showPop(brick, m));
+    brick.addEventListener("mouseleave", hidePop);
+    brick.addEventListener("focus", () => showPop(brick, m));
+    brick.addEventListener("blur", hidePop);
+    brick.addEventListener("click", e => { e.stopPropagation(); showPop(brick, m); });
+    wall.appendChild(brick);
+  });
+  document.addEventListener("click", e => { if (!e.target.closest(".brick")) hidePop(); });
+  document.addEventListener("scroll", () => {
+    if (lit && lit.matches(":hover")) { showPop(lit, lit.__m); }
+    else { pop.classList.remove("show"); if (lit) { lit.classList.remove("lit"); lit = null; } }
+  }, { passive: true, capture: true });
+
+  /* mobile tab switcher */
+  const tabs = document.querySelectorAll(".tabbar button");
+  tabs.forEach(btn => btn.addEventListener("click", () => {
+    tabs.forEach(b => b.classList.toggle("on", b === btn));
+    document.getElementById("paneL").classList.toggle("show", btn.dataset.pane === "L");
+    document.getElementById("paneR").classList.toggle("show", btn.dataset.pane === "R");
+  }));
+
+  /* ---- SPARKLINE ---- */
+  const spark = document.getElementById("spark");
+  const W = 600, H = 90, pad = 10;
+  const pts = updates.map(u => u.progress), dates = updates.map(u => u.date);
+  document.getElementById("histMeta").textContent = updates.length + (updates.length === 1 ? " update" : " updates");
+  if (pts.length) {
+    const lo = Math.min(...pts, progress) - 3, hi = Math.max(...pts, progress) + 3, sp = Math.max(hi - lo, 1);
+    const x = i => pad + (pts.length === 1 ? (W - pad*2) : i/(pts.length-1)*(W - pad*2));
+    const y = v => H - pad - (v - lo)/sp*(H - pad*2);
+    let path = ""; pts.forEach((v,i) => path += (i?"L":"M") + x(i) + " " + y(v) + " ");
+    const area = path + "L" + x(pts.length-1) + " " + (H-pad) + " L" + x(0) + " " + (H-pad) + " Z";
+    let dots = ""; pts.forEach((v,i) => dots += '<circle cx="'+x(i)+'" cy="'+y(v)+'" r="3.5" fill="#16A3C9"><title>'+fmtDate(dates[i])+' · '+fmtP(v)+'%</title></circle>');
+    spark.innerHTML =
+      '<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1BC7B3" stop-opacity="0.28"/><stop offset="100%" stop-color="#1BC7B3" stop-opacity="0"/></linearGradient></defs>' +
+      '<path d="'+area+'" fill="url(#sg)"/>' +
+      '<path d="'+path+'" fill="none" stroke="#16A3C9" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' + dots;
+  } else {
+    spark.innerHTML = '<text x="300" y="48" text-anchor="middle" fill="#AAB3C2" font-family="Space Mono" font-size="12">no updates yet</text>';
+  }
+
+  /* ---- REPORTS ---- */
+  const repWrap = document.getElementById("reports");
+  if (!updates.length) { repWrap.innerHTML = '<p class="empty">No updates posted yet.</p>'; }
+  else {
+    [...updates].reverse().forEach((u, idx) => {
+      const origIdx = updates.length - 1 - idx;
+      const prev = origIdx > 0 ? updates[origIdx - 1].progress : null;
+      const delta = prev !== null ? u.progress - prev : null;
+      const isLatest = origIdx === updates.length - 1;
+      const art = document.createElement("article"); art.className = "report";
+      art.innerHTML =
+        '<div class="report-head">' +
+          '<span class="report-date">' + fmtDate(u.date) + (isLatest ? '<span class="report-tag">latest</span>' : '') + '</span>' +
+          '<span class="report-pct">' + fmtP(u.progress) + "%" +
+            (delta !== null && delta !== 0 ? '<span class="delta">' + (delta > 0 ? "+" : "") + fmtP(delta) + '</span>' : '') + '</span>' +
+        '</div>' +
+        '<ul>' + (u.notes || []).map(n => '<li>' + n + '</li>').join("") + '</ul>';
+      repWrap.appendChild(art);
+    });
+  }
+
+  document.getElementById("footnote").innerHTML =
+    'Every milestone on this page equals exactly <b>1% of the project</b>: ' + delivered.length +
+    ' delivered bricks below the waterline, ' + remaining.length + ' remaining blocks above it. ' +
+    'Hover or tap any brick for what went into it. Adding detail inside a milestone never moves the headline — only daily updates do.';
+})();
+</script>
+</body>
+</html>
