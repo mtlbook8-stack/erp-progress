@@ -387,10 +387,8 @@ window.PROJECT = {
       substeps: [ { t: "Bluetooth receipt printing" }, { t: "Receipt formatter & render plans" }, { t: "On-device PDF generation" }, { t: "Document previews before send" }, { t: "Signature pad capture on delivery" }, { t: "Invoice / order / receipt documents" }, { t: "Template-driven layouts" } ] },
     { title: "Field app deployed", phase: "Field app", zone: "delivered", weight: 1, status: "done", badge: "Deployed",
       substeps: [ { t: "Live & functioning in production" }, { t: "18 pages total" }, { t: "Installable on any phone" }, { t: "Offline-first from day one" }, { t: "Real routes run on it" }, { t: "Sync engine active in the wild" }, { t: "Foundation for driver variant" } ] },
-    { title: "Warehouse handheld screens", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done", note: "finalizing remains above the line",
-      substeps: [ { t: "Picker device screen" }, { t: "Pick list execution flow" }, { t: "Pick status per item" }, { t: "Manager handheld workflows" }, { t: "Pick-list review modal" }, { t: "Warehouse device status handling" }, { t: "API services wired for all flows" } ] },
-    { title: "Warehouse dashboard & config", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done",
-      substeps: [ { t: "Warehouse dashboard screen" }, { t: "Configuration screen" }, { t: "Device setup & binding" }, { t: "Pallet & packing visibility" }, { t: "Back-order awareness" }, { t: "Route/loading context" }, { t: "Role-gated access" } ] },
+    { title: "Warehouse app screens", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done", note: "finalizing remains above the line",
+      substeps: [ { t: "Picker device screen — pick list execution" }, { t: "Pick status per item" }, { t: "Manager handheld workflows" }, { t: "Pick-list review modal" }, { t: "Warehouse dashboard & configuration screens" }, { t: "Device setup, binding & statuses" }, { t: "Pallet, packing & back-order visibility" }, { t: "Role-gated access, API services wired" } ] },
     { title: "Driver app core", phase: "Warehouse & Driver cores", zone: "delivered", weight: 1, status: "done", note: "field-app variant; finalizing remains above the line",
       substeps: [ { t: "Built on the field app platform" }, { t: "Restricted navigation for driver role" }, { t: "Driver route page & stop detail" }, { t: "Delivery status updates & today's deliveries" }, { t: "Proof-of-delivery & signature on the glass" }, { t: "Same sync, offline & printing machinery" }, { t: "Shares one codebase — fixes land everywhere" } ] },
     { title: "Legacy data access & extraction", phase: "Migration groundwork", zone: "delivered", weight: 1, status: "done", note: "source: a 10-year-old Windows desktop app",
@@ -417,13 +415,16 @@ window.PROJECT = {
       substeps: [ { t: "Keyboard no longer hides inputs", done: true }, { t: "Smart back, auto-focus, fewer taps — Android & iOS", done: true }, { t: "Expand/collapse editable cart in the order builder", done: true }, { t: "Edit-order options fully wired", done: true }, { t: "Open-cart flow", done: true }, { t: "Empty fill box & discount bar", done: false }, { t: "Today's deliveries view", done: false }, { t: "Returns, orders & accuracy pass", done: false } ] },
     { title: "Office app UI", zone: "remaining", weight: 1, status: "active", fill: 25,
       note: "UI touch-ups (grouped)",
-      substeps: [ { t: "Navigation quirks & UI bugs — mostly fixed", done: true }, { t: "Discount caps tightened — simpler to use & read", done: true }, { t: "Customers: advanced sort, groups, per-customer actions", done: false }, { t: "Orders, returns & invoices improvements", done: false }, { t: "Payments, credit & pricing display", done: false }, { t: "Statements: options, filters & print", done: false }, { t: "Catalog: stock & deposit display, promotions", done: false }, { t: "Tables aligned, dropdowns fixed, UI polish", done: false }, { t: "Notifications, tasks & triggers everywhere", done: false }, { t: "Complete live SMTP email hookup — with client IT help", done: false }, { t: "Sales-people reports & actions", done: false } ] },
+      substeps: [ { t: "Navigation quirks & UI bugs — mostly fixed", done: true }, { t: "Discount caps tightened — simpler to use & read", done: true }, { t: "Customers: advanced sort, groups, per-customer actions", done: false }, { t: "Orders, returns & invoices improvements", done: false }, { t: "Payments, credit & pricing display", done: false }, { t: "Statements: options, filters & print", done: false }, { t: "Catalog: stock & deposit display, promotions", done: false }, { t: "Tables aligned, dropdowns fixed, UI polish", done: false }, { t: "Notifications, tasks & triggers everywhere", done: false }, { t: "Sales-people reports & actions", done: false } ] },
     { title: "Accuracy testing", zone: "remaining", weight: 1, status: "pending", fill: 0,
       note: "final number accuracy via UI — draft plan, confirm with me",
       substeps: [ { t: "Number accuracy verified through the UI" }, { t: "Order → invoice totals cross-checked" }, { t: "Payment allocation math verified" }, { t: "Deposit totals verified end-to-end" }, { t: "Ledger balances vs UI figures compared" }, { t: "Aging & statement figures checked" }, { t: "Sign-off checklist per module" } ] },
     { title: "Security review", zone: "remaining", weight: 1, status: "pending", fill: 0,
       note: "vulnerability pass, MFA, sessions",
       substeps: [ { t: "Full integrity & vulnerability review" }, { t: "Auth & session hardening pass" }, { t: "Patch anything found" }, { t: "MFA implementation" }, { t: "Improved session handling" }, { t: "Rate limiting & abuse checks" }, { t: "Review of secrets & permissions" } ] },
+    { title: "Sync fallback, push & email", zone: "remaining", weight: 1, status: "pending", fill: 0,
+      note: "hardening the pieces that must never fail quietly",
+      substeps: [ { t: "Test sync engine's device-storage fallback under real failures", done: false }, { t: "Simulate storage loss & verify full restore", done: false }, { t: "Confirm zero data loss through the fallback path", done: false }, { t: "Push notifications — Android", done: false }, { t: "Push notifications — iOS", done: false }, { t: "Wire push into notification center & preferences", done: false }, { t: "Finalize SMTP setup — with client IT", done: false }, { t: "Test email end-to-end: statements & notifications", done: false } ] },
     { title: "Migration", zone: "remaining", weight: 1, status: "active", fill: 15,
       note: "server access & extraction already done (see wall) — old & new systems will run side-by-side, so migration repeats until cutover",
       substeps: [ { t: "Clean & normalize the extracted data" }, { t: "Combine & split tables to fit the new model — some need both" }, { t: "Reconcile features that don't work the same in both systems" }, { t: "Script the loading into the new schema" }, { t: "Integrity checks after every load" }, { t: "Build a repeatable model for constant iterations of new data" }, { t: "Re-run iterations while both systems are used simultaneously" }, { t: "Final cutover when the new system fully takes over" } ] },
@@ -443,12 +444,12 @@ window.PROJECT = {
 
   /* ---- DAILY REPORTS — newest entry goes LAST. Replace the sample with real ones. ---- */
   updates: [
-    { date: "2026-07-12", progress: 90,
+    { date: "2026-07-12", progress: 89,
       notes: [
-        "Progress dashboard created — baseline set at 90% delivered",
+        "Progress dashboard created — baseline set at 89 delivered milestones of 100",
         "Migration groundwork already complete: legacy server access & data extraction"
       ] },
-    { date: "2026-07-14", progress: 91.9,
+    { date: "2026-07-14", progress: 90.9,
       notes: [
         "Payments: add-card & saved-card flows, payment links in more flows — easier to use",
         "ACH wired + secure bank-info saving in both apps; remaining: fund-allocation rework & final tests",
