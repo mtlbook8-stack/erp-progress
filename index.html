@@ -420,9 +420,9 @@ window.PROJECT = {
     { title: "Office app UI", zone: "remaining", weight: 1, status: "active", fill: 25,
       note: "UI touch-ups (grouped)",
       substeps: [ { t: "Navigation quirks & UI bugs — mostly fixed", done: true }, { t: "Discount caps tightened — simpler to use & read", done: true }, { t: "Customers: advanced sort, groups, per-customer actions", done: false }, { t: "Orders, returns & invoices improvements", done: false }, { t: "Payments, credit & pricing display", done: false }, { t: "Statements: options, filters & print", done: false }, { t: "Catalog: stock & deposit display, promotions", done: false }, { t: "Tables aligned, dropdowns fixed, UI polish", done: false }, { t: "Notifications, tasks & triggers everywhere", done: false }, { t: "Sales-people reports & actions", done: false } ] },
-    { title: "Accuracy testing", zone: "remaining", weight: 1, status: "active", fill: 10,
-      note: "underway — field app pass started, 18 quirks found & being fixed",
-      substeps: [ { t: "Field app pass started — 18 quirks found, fixes in progress", done: false }, { t: "Number accuracy verified through the UI", done: false }, { t: "Order → invoice totals cross-checked", done: false }, { t: "Payment allocation math verified", done: false }, { t: "Deposit totals verified end-to-end", done: false }, { t: "Ledger balances vs UI figures compared", done: false }, { t: "Aging & statement figures checked", done: false }, { t: "Sign-off checklist per module", done: false } ] },
+    { title: "Accuracy testing", zone: "remaining", weight: 1, status: "active", fill: 15,
+      note: "underway — field app pass: 18 quirks found & all fixed",
+      substeps: [ { t: "Field app pass — 18 quirks found & fixed", done: true }, { t: "Number accuracy verified through the UI", done: false }, { t: "Order → invoice totals cross-checked", done: false }, { t: "Payment allocation math verified", done: false }, { t: "Deposit totals verified end-to-end", done: false }, { t: "Ledger balances vs UI figures compared", done: false }, { t: "Aging & statement figures checked", done: false }, { t: "Sign-off checklist per module", done: false } ] },
     { title: "Security review", zone: "remaining", weight: 1, status: "pending", fill: 0,
       note: "vulnerability pass, MFA, sessions",
       substeps: [ { t: "Full integrity & vulnerability review" }, { t: "Auth & session hardening pass" }, { t: "Patch anything found" }, { t: "MFA implementation" }, { t: "Improved session handling" }, { t: "Rate limiting & abuse checks" }, { t: "Review of secrets & permissions" } ] },
@@ -469,7 +469,7 @@ window.PROJECT = {
         "Today's deliveries view added — in both apps",
         "Returns & edit hardened: rules & discount caps enforced with approval flows — accurate through edge cases (discounts, partially-paid orders)",
         "Easier returns & cancellation flow",
-        "Started accuracy testing in the field app — 18 quirks found, fixes underway"
+        "Started accuracy testing in the field app — 18 quirks found & all fixed"
       ] }
   ]
 };
