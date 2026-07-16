@@ -70,6 +70,9 @@
   .rcard .r-status { font-family: var(--mono); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; flex: none; white-space: nowrap; }
   .rcard.active .r-status { background: rgba(168,214,47,.18); color: var(--lime-deep); }
   .rcard.pending .r-status { background: var(--line-soft); color: var(--muted); }
+  .rcard.done .r-status { background: rgba(27,199,179,.16); color: #0E8F7F; }
+  .rcard.done { border-color: rgba(27,199,179,.45); }
+  .rcard.done .r-name { color: var(--muted); }
   .rcard .r-fillbar { height: 4px; border-radius: 4px; background: var(--line-soft); margin-top: 8px; overflow: hidden; }
   .rcard .r-fillbar span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--lime-deep), var(--lime)); position: relative; }
   .rcard.active .r-fillbar span::after { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0 rgba(198,242,78,.7); animation: beacon 2s ease-out infinite; }
@@ -408,18 +411,18 @@ window.PROJECT = {
       substeps: [ { t: "All environments provisioned" }, { t: "Server serving in production" }, { t: "All apps hosted & reachable" }, { t: "Logs & diagnostics in place" }, { t: "Secrets locked down" }, { t: "Real data flowing daily" }, { t: "Uptime through the whole build" } ] },
 
     /* ===== REMAINING WORK — 10 blocks × 1% ===== */
-    { title: "Payments — ACH & UX additions", zone: "remaining", weight: 1, status: "active", fill: 75,
-      note: "gateway was already live — additions nearly done: fund-allocation flow rework & final tests remain",
-      substeps: [ { t: "ACH wired", done: true }, { t: "Secure bank-info saving in both apps", done: true }, { t: "Add-card & saved-card flows", done: true }, { t: "Payment links available in more flows", done: true }, { t: "Payment UX made easier to use", done: true }, { t: "Rework fund-allocation flow", done: false }, { t: "Finish & pass all payment tests", done: false } ] },
-    { title: "Field app UI", zone: "remaining", weight: 1, status: "active", fill: 70,
-      note: "mostly ready — UI touch-ups from the field list",
-      substeps: [ { t: "Keyboard no longer hides inputs", done: true }, { t: "Smart back, auto-focus, fewer taps — Android & iOS", done: true }, { t: "Expand/collapse editable cart in the order builder", done: true }, { t: "Edit-order options fully wired", done: true }, { t: "Open-cart flow", done: true }, { t: "Empty fill box & discount bar", done: false }, { t: "Today's deliveries view", done: false }, { t: "Returns, orders & accuracy pass", done: false } ] },
+    { title: "Payments — ACH & UX additions", zone: "remaining", weight: 1, status: "done", fill: 100,
+      note: "complete — all 24 test scenarios pass",
+      substeps: [ { t: "ACH wired", done: true }, { t: "Secure bank-info saving in both apps", done: true }, { t: "Add-card & saved-card flows", done: true }, { t: "Payment links available in more flows", done: true }, { t: "Payment UX made easier to use", done: true }, { t: "Fund-allocation flow reworked", done: true }, { t: "All 24 payment test scenarios pass", done: true } ] },
+    { title: "Field app UI", zone: "remaining", weight: 1, status: "active", fill: 95,
+      note: "95% — only persistent nav buttons and statements & receipts left",
+      substeps: [ { t: "Keyboard no longer hides inputs", done: true }, { t: "Smart back, auto-focus, fewer taps — Android & iOS", done: true }, { t: "Expand/collapse editable cart in the order builder", done: true }, { t: "Edit-order options fully wired", done: true }, { t: "Open-cart flow, empty fill box & discount bar", done: true }, { t: "Today's deliveries view — in both apps", done: true }, { t: "Returns & edit hardened: rules & caps enforced, with approval flows — accurate in edge cases (discounts, partially-paid)", done: true }, { t: "Navigation buttons persist on all pages", done: false }, { t: "Statements & payment receipts", done: false } ] },
     { title: "Office app UI", zone: "remaining", weight: 1, status: "active", fill: 25,
       note: "UI touch-ups (grouped)",
       substeps: [ { t: "Navigation quirks & UI bugs — mostly fixed", done: true }, { t: "Discount caps tightened — simpler to use & read", done: true }, { t: "Customers: advanced sort, groups, per-customer actions", done: false }, { t: "Orders, returns & invoices improvements", done: false }, { t: "Payments, credit & pricing display", done: false }, { t: "Statements: options, filters & print", done: false }, { t: "Catalog: stock & deposit display, promotions", done: false }, { t: "Tables aligned, dropdowns fixed, UI polish", done: false }, { t: "Notifications, tasks & triggers everywhere", done: false }, { t: "Sales-people reports & actions", done: false } ] },
-    { title: "Accuracy testing", zone: "remaining", weight: 1, status: "pending", fill: 0,
-      note: "final number accuracy via UI — draft plan, confirm with me",
-      substeps: [ { t: "Number accuracy verified through the UI" }, { t: "Order → invoice totals cross-checked" }, { t: "Payment allocation math verified" }, { t: "Deposit totals verified end-to-end" }, { t: "Ledger balances vs UI figures compared" }, { t: "Aging & statement figures checked" }, { t: "Sign-off checklist per module" } ] },
+    { title: "Accuracy testing", zone: "remaining", weight: 1, status: "active", fill: 10,
+      note: "underway — field app pass started, 18 quirks found & being fixed",
+      substeps: [ { t: "Field app pass started — 18 quirks found, fixes in progress", done: false }, { t: "Number accuracy verified through the UI", done: false }, { t: "Order → invoice totals cross-checked", done: false }, { t: "Payment allocation math verified", done: false }, { t: "Deposit totals verified end-to-end", done: false }, { t: "Ledger balances vs UI figures compared", done: false }, { t: "Aging & statement figures checked", done: false }, { t: "Sign-off checklist per module", done: false } ] },
     { title: "Security review", zone: "remaining", weight: 1, status: "pending", fill: 0,
       note: "vulnerability pass, MFA, sessions",
       substeps: [ { t: "Full integrity & vulnerability review" }, { t: "Auth & session hardening pass" }, { t: "Patch anything found" }, { t: "MFA implementation" }, { t: "Improved session handling" }, { t: "Rate limiting & abuse checks" }, { t: "Review of secrets & permissions" } ] },
@@ -459,6 +462,14 @@ window.PROJECT = {
         "Discount caps tightened — simpler to use and read",
         "Sync engine: exact error display + clear list of not-synced entries when offline",
         "Field: edit-order options wired; expand/collapse editable cart in order builder"
+      ] },
+    { date: "2026-07-15", progress: 91.5,
+      notes: [
+        "Payment tests completed — all 24 scenarios pass. Milestone 1 (Payments) COMPLETE",
+        "Today's deliveries view added — in both apps",
+        "Returns & edit hardened: rules & discount caps enforced with approval flows — accurate through edge cases (discounts, partially-paid orders)",
+        "Easier returns & cancellation flow",
+        "Started accuracy testing in the field app — 18 quirks found, fixes underway"
       ] }
   ]
 };
@@ -508,7 +519,7 @@ window.PROJECT = {
       '<div class="r-top">' +
         '<span class="r-seq">' + String(i + 1).padStart(2, "0") + '</span>' +
         '<span class="r-name">' + m.title + '</span>' +
-        '<span class="r-status">' + (LABEL[m.status] || "Upcoming") +
+        '<span class="r-status">' + (m.status === "done" ? "Complete ✓" : (LABEL[m.status] || "Upcoming")) +
           (m.status === "active" && m.fill ? " " + fmtP(m.fill) + "%" : "") + '</span>' +
       '</div>' +
       (m.status === "active" && m.fill ? '<div class="r-fillbar"><span style="width:' + m.fill + '%"></span></div>' : '') +
